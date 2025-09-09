@@ -1,29 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useApi } from "../api/useApi";
-import InstructorForm from "./InstructorForm";
 
-export default function InstructorList() {
+export default function InstructorList({ refreshKey = 0, onEdit }) {
   const { request, loading, error } = useApi();
   const [instructors, setInstructors] = useState([]);
-  const [editing, setEditing] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchInstructors = useCallback(async () => {
+    try {
+      const { data } = await request("/instructors/");
+      setInstructors(data || []);
+    } catch (e) {
+      console.error("Error loading instructors", e);
+    }
+  }, [request]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await request("/instructors/");
-        setInstructors(data || []);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, [request, refreshKey]);
+    fetchInstructors();
+  }, [fetchInstructors, refreshKey]);
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this instructor? This will cascade delete related courses if backend has on_delete=CASCADE.")) return;
     try {
       await request(`/instructors/${id}/`, { method: "DELETE" });
-      setRefreshKey((k) => k + 1);
+      await fetchInstructors();
     } catch (e) {
       console.error(e);
       alert("Failed to delete");
@@ -35,17 +34,6 @@ export default function InstructorList() {
 
   return (
     <div className="p-4">
-      <div className="mb-4">
-        <InstructorForm
-          editingInstructor={editing}
-          onSaved={() => {
-            setEditing(null);
-            setRefreshKey((k) => k + 1);
-          }}
-          onCancel={() => setEditing(null)}
-        />
-      </div>
-
       <h2 className="text-2xl font-bold mb-3">Instructors</h2>
       <div className="space-y-3">
         {instructors.map((i) => (
@@ -55,8 +43,18 @@ export default function InstructorList() {
               <div className="text-sm text-gray-600">{i.email}</div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setEditing(i)} className="px-3 py-1 bg-yellow-400 rounded">Edit</button>
-              <button onClick={() => handleDelete(i.id)} className="px-3 py-1 bg-red-500 text-white rounded">Delete</button>
+              <button
+                onClick={() => onEdit && onEdit(i)}
+                className="px-3 py-1 bg-yellow-400 rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(i.id)}
+                className="px-3 py-1 bg-red-500 text-white rounded"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
