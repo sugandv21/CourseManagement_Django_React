@@ -1,4 +1,3 @@
-// pages/instructor.jsx
 import React, { useState, useRef, useEffect } from "react";
 import InstructorList from "../components/InstructorList";
 import InstructorForm from "../components/InstructorForm";
@@ -41,3 +40,4 @@ export default function Instructors() {
     </div>
   );
 }
+
