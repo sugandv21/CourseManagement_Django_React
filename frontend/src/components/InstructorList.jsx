@@ -19,7 +19,8 @@ export default function InstructorList({ refreshKey = 0, onEdit }) {
   }, [fetchInstructors, refreshKey]);
 
   const handleDelete = async (id) => {
-    if (!confirm("Delete this instructor? This will cascade delete related courses if backend has on_delete=CASCADE.")) return;
+    // if (!confirm("Delete this instructor? This will cascade delete related courses if backend has on_delete=CASCADE.")) return;
+    if (!confirm("Delete this instructor?")) return;
     try {
       await request(`/instructors/${id}/`, { method: "DELETE" });
       await fetchInstructors();
@@ -63,3 +64,4 @@ export default function InstructorList({ refreshKey = 0, onEdit }) {
     </div>
   );
 }
+
