@@ -34,15 +34,10 @@ export default function Home() {
 
   return (
     <div className="p-6 space-y-10">
-      {/* Page Heading */}
       <h1 className="text-4xl font-extrabold mb-2 text-indigo-600 drop-shadow-md">
         Welcome to Online Course Tracker
       </h1>
-      <p className="text-gray-700 mb-8 text-lg">
-        Manage your courses and instructors easily.
-      </p>
 
-      {/* Courses Section */}
       <section>
         <h2 className="text-2xl font-bold mb-6 text-blue-600 border-b-2 border-blue-200 pb-2">
           Available Courses
@@ -70,7 +65,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Instructors Section */}
       <section>
         <h2 className="text-2xl font-bold mb-6 text-green-600 border-b-2 border-green-200 pb-2">
           Instructors
@@ -95,3 +89,4 @@ export default function Home() {
     </div>
   );
 }
+
