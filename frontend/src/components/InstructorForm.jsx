@@ -6,7 +6,7 @@ export default function InstructorForm({ onSaved, editingInstructor = null, onCa
   const [form, setForm] = useState({ name: "", email: "", bio: "" });
   const [saving, setSaving] = useState(false);
 
-  // modal state
+  // modal state for success flash
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -21,8 +21,8 @@ export default function InstructorForm({ onSaved, editingInstructor = null, onCa
     }
   }, [editingInstructor]);
 
-  // helper to show modal and auto-hide
-  const flashSuccess = (ms = 1800) => {
+  // small flash modal helper
+  const flashSuccess = (ms = 1400) => {
     setShowModal(true);
     setTimeout(() => setShowModal(false), ms);
   };
@@ -40,16 +40,14 @@ export default function InstructorForm({ onSaved, editingInstructor = null, onCa
         await request("/instructors/", { method: "POST", body: form });
       }
 
-      // show modal success
       flashSuccess();
 
-      // call parent callback (refresh list, clear editing state, etc.)
       if (onSaved) onSaved();
 
-      // reset form only when creating (for edit, parent likely clears editingInstructor)
+      // reset only when creating (not when editing)
       if (!editingInstructor) setForm({ name: "", email: "", bio: "" });
     } catch (err) {
-      console.error(err);
+      console.error("Save error", err);
       alert("Error saving instructor");
     } finally {
       setSaving(false);
@@ -59,7 +57,9 @@ export default function InstructorForm({ onSaved, editingInstructor = null, onCa
   return (
     <>
       <form onSubmit={handleSubmit} className="p-4 border rounded bg-white shadow-sm">
-        <h2 className="text-lg font-semibold mb-3">{editingInstructor ? "Edit Instructor" : "Add Instructor"}</h2>
+        <h2 className="text-lg font-semibold mb-3">
+          {editingInstructor ? "Edit Instructor" : "Add Instructor"}
+        </h2>
 
         <div className="mb-2">
           <label className="block text-sm font-medium">Name</label>
@@ -93,18 +93,30 @@ export default function InstructorForm({ onSaved, editingInstructor = null, onCa
         </div>
 
         <div className="flex gap-2 mt-3">
-          <button type="submit" disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 bg-green-600 text-white rounded"
+          >
             {editingInstructor ? "Save changes" : "Save Instructor"}
           </button>
+
           {editingInstructor && (
-            <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">
+            <button
+              type="button"
+              onClick={() => {
+                if (onCancel) onCancel();
+                else setForm({ name: "", email: "", bio: "" });
+              }}
+              className="px-4 py-2 bg-gray-200 rounded"
+            >
               Cancel
             </button>
           )}
         </div>
       </form>
 
-      {/* Modal */}
+      {/* Success modal */}
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
