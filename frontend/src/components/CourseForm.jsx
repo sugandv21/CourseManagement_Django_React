@@ -1,145 +1,146 @@
 import React, { useState, useEffect } from "react";
 import { useApi } from "../api/useApi";
 
-export default function CourseForm({ onSaved, editingCourse = null, onCancel }) {
+export default function InstructorForm({ onSaved, editingInstructor = null, onCancel }) {
   const { request } = useApi();
-  const [instructors, setInstructors] = useState([]);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    instructor_id: "",
-    total_lessons: 0,
-  });
+  const [form, setForm] = useState({ name: "", email: "", bio: "" });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await request("/instructors/");
-        setInstructors(data || []);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, [request]);
+  // modal state
+  const [showModal, setShowModal] = useState(false);
 
-  // load editingCourse into form
   useEffect(() => {
-    if (editingCourse) {
+    if (editingInstructor) {
       setForm({
-        title: editingCourse.title || "",
-        description: editingCourse.description || "",
-        instructor_id: editingCourse.instructor?.id || "",
-        total_lessons: editingCourse.total_lessons ?? 0,
+        name: editingInstructor.name || "",
+        email: editingInstructor.email || "",
+        bio: editingInstructor.bio || "",
       });
     } else {
-      setForm({
-        title: "",
-        description: "",
-        instructor_id: "",
-        total_lessons: 0,
-      });
+      setForm({ name: "", email: "", bio: "" });
     }
-  }, [editingCourse]);
+  }, [editingInstructor]);
+
+  // helper to show modal and auto-hide
+  const flashSuccess = (ms = 1800) => {
+    setShowModal(true);
+    setTimeout(() => setShowModal(false), ms);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const body = {
-        title: form.title,
-        description: form.description,
-        instructor_id: Number(form.instructor_id),
-        total_lessons: Number(form.total_lessons),
-      };
-
-      if (editingCourse) {
-        // Use PATCH so we don't need to send all fields if not changed
-        await request(`/courses/${editingCourse.id}/`, { method: "PATCH", body });
+      if (editingInstructor) {
+        await request(`/instructors/${editingInstructor.id}/`, {
+          method: "PATCH",
+          body: form,
+        });
       } else {
-        await request("/courses/", { method: "POST", body });
+        await request("/instructors/", { method: "POST", body: form });
       }
 
+      // show modal success
+      flashSuccess();
+
+      // call parent callback (refresh list, clear editing state, etc.)
       if (onSaved) onSaved();
-      setForm({ title: "", description: "", instructor_id: "", total_lessons: 0 });
+
+      // reset form only when creating (for edit, parent likely clears editingInstructor)
+      if (!editingInstructor) setForm({ name: "", email: "", bio: "" });
     } catch (err) {
       console.error(err);
-      alert("Error saving course");
+      alert("Error saving instructor");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded bg-white shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">{editingCourse ? "Edit Course" : "Add Course"}</h2>
+    <>
+      <form onSubmit={handleSubmit} className="p-4 border rounded bg-white shadow-sm">
+        <h2 className="text-lg font-semibold mb-3">{editingInstructor ? "Edit Instructor" : "Add Instructor"}</h2>
 
-      <div className="mb-2">
-        <label className="block text-sm font-medium">Title</label>
-        <input
-          type="text"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
-          className="w-full p-2 border rounded"
-        />
-      </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium">Name</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+            className="w-full p-2 border rounded"
+          />
+        </div>
 
-      <div className="mb-2">
-        <label className="block text-sm font-medium">Description</label>
-        <textarea
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full p-2 border rounded"
-        />
-      </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium">Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            className="w-full p-2 border rounded"
+          />
+        </div>
 
-      <div className="mb-2">
-        <label className="block text-sm font-medium">Instructor</label>
-        <select
-          value={form.instructor_id}
-          onChange={(e) => setForm({ ...form, instructor_id: e.target.value })}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Select instructor</option>
-          {instructors.map((i) => (
-            <option value={i.id} key={i.id}>
-              {i.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium">Bio</label>
+          <textarea
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            className="w-full p-2 border rounded"
+          />
+        </div>
 
-      <div className="mb-2">
-        <label className="block text-sm font-medium">Total Lessons</label>
-        <input
-          type="number"
-          min={0}
-          value={form.total_lessons}
-          onChange={(e) => setForm({ ...form, total_lessons: e.target.value })}
-          className="w-full p-2 border rounded"
-        />
-      </div>
-
-      <div className="flex gap-2 mt-3">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          {editingCourse ? "Save changes" : "Create course"}
-        </button>
-        {editingCourse && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
-          >
-            Cancel
+        <div className="flex gap-2 mt-3">
+          <button type="submit" disabled={saving} className="px-4 py-2 bg-green-600 text-white rounded">
+            {editingInstructor ? "Save changes" : "Save Instructor"}
           </button>
-        )}
-      </div>
-    </form>
+          {editingInstructor && (
+            <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded">
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Saved successfully"
+        >
+          {/* overlay */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+          />
+
+          <div className="relative z-10 w-80 max-w-full mx-4">
+            <div className="bg-white rounded-lg shadow-lg p-4 text-center">
+              <svg
+                className="mx-auto mb-2 h-10 w-10 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <h3 className="text-lg font-semibold">Saved successfully</h3>
+              <p className="text-sm text-gray-600 mt-1">Your instructor was saved.</p>
+              <button
+                onClick={() => setShowModal(false)}
+                className="mt-3 px-4 py-2 bg-green-600 text-white rounded"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
