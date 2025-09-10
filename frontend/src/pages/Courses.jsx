@@ -1,4 +1,3 @@
-// src/pages/Courses.jsx
 import React, { useState } from "react";
 import CourseList from "../components/CourseList";
 import CourseForm from "../components/CourseForm";
@@ -30,3 +29,4 @@ export default function Courses() {
     </div>
   );
 }
+
