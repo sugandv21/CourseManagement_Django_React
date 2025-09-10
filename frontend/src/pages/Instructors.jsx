@@ -7,7 +7,7 @@ export default function Instructors() {
   const [editingInstructor, setEditingInstructor] = useState(null);
   const formContainerRef = useRef(null);
 
-  // scroll to the form when user clicks Edit in the list
+  // scroll to the form when clicks Edit in the list
   useEffect(() => {
     if (editingInstructor) {
       formContainerRef.current?.scrollIntoView({
@@ -40,4 +40,5 @@ export default function Instructors() {
     </div>
   );
 }
+
 
